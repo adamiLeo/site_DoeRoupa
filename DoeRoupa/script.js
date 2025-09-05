@@ -1,7 +1,38 @@
 // Simulação de banco de dados
 let users = [];
 let donations = [];
+let requests = []; // Novas solicitações
 let currentUser = null;
+
+// Dados de exemplo com tipos de usuário
+const sampleUsers = [
+    {
+        id: 1,
+        name: 'João Silva',
+        email: 'joao@email.com',
+        phone: '(11) 99999-9999',
+        password: '123456',
+        userType: 'doador'
+    },
+    {
+        id: 2,
+        name: 'Maria Santos',
+        email: 'maria@email.com',
+        phone: '(21) 88888-8888',
+        password: '123456',
+        userType: 'receptor'
+    },
+    {
+        id: 3,
+        name: 'Ana Costa',
+        email: 'ana@email.com',
+        phone: '(31) 77777-7777',
+        password: '123456',
+        userType: 'ambos'
+    }
+];
+
+users = [...sampleUsers];
 
 // Dados de exemplo
 const sampleDonations = [
@@ -15,6 +46,7 @@ const sampleDonations = [
         description: 'Camisa social azul claro, muito bem conservada, ideal para trabalho',
         location: 'São Paulo, SP',
         donor: 'João Silva',
+        donorId: 1,
         date: new Date()
     },
     {
@@ -27,6 +59,7 @@ const sampleDonations = [
         description: 'Vestido com estampa floral, muito fofo para meninas de 4-6 anos',
         location: 'Rio de Janeiro, RJ',
         donor: 'Maria Santos',
+        donorId: 2,
         date: new Date()
     },
     {
@@ -39,6 +72,7 @@ const sampleDonations = [
         description: 'Blusa de tricot rosa, nunca usada, ainda com etiqueta',
         location: 'Belo Horizonte, MG',
         donor: 'Ana Costa',
+        donorId: 3,
         date: new Date()
     }
 ];
@@ -91,7 +125,23 @@ window.showUserDashboard = function() {
     hideAllPages();
     document.getElementById('userDashboard').classList.add('active');
     document.getElementById('userDashboard').style.display = 'block';
+    createDashboardNavigation();
     updateDashboardStats();
+    showDashboardTab('stats');
+}
+
+window.toggleUserMenu = function() {
+    const dropdown = document.getElementById('userDropdown');
+    dropdown.classList.toggle('active');
+}
+
+window.showProfile = function() {
+    hideAllPages();
+    document.getElementById('userDashboard').classList.add('active');
+    document.getElementById('userDashboard').style.display = 'block';
+    createDashboardNavigation();
+    showDashboardTab('profile');
+    loadProfileData();
 }
 
 window.showDashboardTab = function(tabName) {
@@ -104,31 +154,47 @@ window.showDashboardTab = function(tabName) {
     buttons.forEach(btn => btn.classList.remove('active'));
     
     // Mostra a aba selecionada
-    document.getElementById(tabName + 'Tab').style.display = 'block';
+    const targetTab = document.getElementById(tabName + 'Tab');
+    if (targetTab) {
+        targetTab.style.display = 'block';
+    }
     
     // Adiciona classe active ao botão clicado
-    const clickedButton = Array.from(buttons).find(btn => btn.textContent.toLowerCase().includes(tabName.toLowerCase()) || 
-        (tabName === 'stats' && btn.textContent === 'Estatísticas') ||
-        (tabName === 'myDonations' && btn.textContent === 'Minhas Doações') ||
-        (tabName === 'newDonation' && btn.textContent === 'Nova Doação'));
+    const clickedButton = Array.from(buttons).find(btn => 
+        btn.onclick && btn.onclick.toString().includes(tabName)
+    );
     if (clickedButton) {
         clickedButton.classList.add('active');
     }
 
-    if (tabName === 'myDonations') {
-        displayUserDonations();
+    // Carrega conteúdo específico da aba
+    switch(tabName) {
+        case 'myDonations':
+            displayUserDonations();
+            break;
+        case 'stats':
+            updateDashboardStats();
+            break;
+        case 'requests':
+            displayReceivedRequests();
+            break;
+        case 'myRequests':
+            displayMyRequests();
+            break;
+        case 'profile':
+            loadProfileData();
+            break;
     }
 }
 
 window.logout = function() {
     currentUser = null;
     document.querySelector('.auth-buttons').style.display = 'flex';
+    document.getElementById('userMenu').style.display = 'none';
     
-    // Remove botão do usuário
-    const userButton = document.querySelector('nav .container > div:last-child');
-    if (userButton && userButton.querySelector('button')) {
-        userButton.remove();
-    }
+    // Fecha dropdown se estiver aberto
+    const dropdown = document.getElementById('userDropdown');
+    dropdown.classList.remove('active');
 
     // Atualiza a página de doações se estiver visível
     refreshDonationsView();
@@ -145,9 +211,29 @@ window.contactDonor = function(donationId) {
         return;
     }
 
+    // Verifica se é um receptor ou ambos
+    if (currentUser.userType === 'doador') {
+        alert('Apenas receptores podem solicitar roupas. Altere seu tipo de conta no perfil para "Receptor" ou "Ambos".');
+        return;
+    }
+
     const donation = donations.find(d => d.id === donationId);
     if (donation) {
-        alert(`Solicitação enviada! O doador ${donation.donor} receberá sua mensagem sobre "${donation.title}". Em breve você receberá o contato para combinar a retirada.`);
+        // Cria uma solicitação
+        const newRequest = {
+            id: requests.length + 1,
+            donationId: donationId,
+            requesterId: currentUser.id,
+            requesterName: currentUser.name,
+            requesterPhone: currentUser.phone,
+            donorName: donation.donor,
+            donationTitle: donation.title,
+            status: 'pendente',
+            date: new Date()
+        };
+        
+        requests.push(newRequest);
+        alert(`Solicitação enviada! O doador ${donation.donor} receberá sua mensagem sobre "${donation.title}". Aguarde o contato para combinar a retirada.`);
     }
 }
 
@@ -158,6 +244,41 @@ window.removeDonation = function(donationId) {
         updateDashboardStats();
         alert('Doação removida com sucesso!');
     }
+}
+
+// Função para carregar dados do perfil
+function loadProfileData() {
+    if (!currentUser) return;
+    
+    document.getElementById('profileName').value = currentUser.name;
+    document.getElementById('profileEmail').value = currentUser.email;
+    document.getElementById('profilePhone').value = currentUser.phone;
+    document.getElementById('profileUserType').value = currentUser.userType;
+}
+
+// Função para criar navegação dinâmica baseada no tipo de usuário
+function createDashboardNavigation() {
+    if (!currentUser) return;
+
+    const navContainer = document.getElementById('dashboardNav');
+    const userType = currentUser.userType;
+    
+    let navButtons = ['<button class="active" onclick="showDashboardTab(\'stats\')">📊 Estatísticas</button>'];
+    
+    // Adiciona abas específicas baseadas no tipo de usuário
+    if (userType === 'doador' || userType === 'ambos') {
+        navButtons.push('<button onclick="showDashboardTab(\'myDonations\')">🎁 Minhas Doações</button>');
+        navButtons.push('<button onclick="showDashboardTab(\'newDonation\')">➕ Nova Doação</button>');
+        navButtons.push('<button onclick="showDashboardTab(\'requests\')">📋 Solicitações</button>');
+    }
+    
+    if (userType === 'receptor' || userType === 'ambos') {
+        navButtons.push('<button onclick="showDashboardTab(\'myRequests\')">🤝 Minhas Solicitações</button>');
+    }
+    
+    navButtons.push('<button onclick="showDashboardTab(\'profile\')">👤 Perfil</button>');
+    
+    navContainer.innerHTML = navButtons.join('');
 }
 
 function hideAllPages() {
@@ -186,15 +307,31 @@ function updateLoginHint() {
 
 function login(user) {
     currentUser = user;
+    
+    // Atualiza interface
     document.getElementById('userName').textContent = user.name;
+    document.getElementById('userNameBtn').textContent = user.name;
     
-    // Oculta botões de auth e mostra dashboard
+    // Mostra badge do tipo de usuário
+    const userTypeBadge = document.getElementById('userTypeDisplay');
+    const typeLabels = {
+        'doador': '🎁 Doador',
+        'receptor': '🤝 Receptor',
+        'ambos': '❤️ Ambos'
+    };
+    userTypeBadge.textContent = typeLabels[user.userType];
+    
+    // Atualiza descrição do dashboard
+    const descriptions = {
+        'doador': 'Gerencie suas doações e ajude pessoas em necessidade',
+        'receptor': 'Encontre roupas que você precisa na nossa comunidade',
+        'ambos': 'Doe, receba e faça parte da nossa rede de solidariedade'
+    };
+    document.getElementById('dashboardDescription').textContent = descriptions[user.userType];
+    
+    // Oculta botões de auth e mostra menu do usuário
     document.querySelector('.auth-buttons').style.display = 'none';
-    
-    // Adiciona botão do usuário
-    const userButton = document.createElement('div');
-    userButton.innerHTML = `<button class="btn btn-primary" onclick="showUserDashboard()">${user.name}</button>`;
-    document.querySelector('nav .container').appendChild(userButton);
+    document.getElementById('userMenu').style.display = 'block';
 
     updateDashboardStats();
     
@@ -205,10 +342,115 @@ function login(user) {
 function updateDashboardStats() {
     if (!currentUser) return;
 
+    const statsGrid = document.getElementById('statsGrid');
+    const userType = currentUser.userType;
     const userDonations = donations.filter(d => d.donor === currentUser.name);
-    document.getElementById('totalDonations').textContent = userDonations.length;
-    document.getElementById('helpedPeople').textContent = userDonations.length * 2; // Estimativa
-    document.getElementById('activeDonations').textContent = userDonations.length;
+    const userRequests = requests.filter(r => r.requesterId === currentUser.id);
+    
+    let statsCards = [];
+    
+    // Estatísticas para doadores
+    if (userType === 'doador' || userType === 'ambos') {
+        statsCards.push(`
+            <div class="stat-card">
+                <div class="stat-number">${userDonations.length}</div>
+                <div>Doações Feitas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">${userDonations.length * 2}</div>
+                <div>Pessoas Ajudadas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">${requests.filter(r => userDonations.find(d => d.id === r.donationId)).length}</div>
+                <div>Solicitações Recebidas</div>
+            </div>
+        `);
+    }
+    
+    // Estatísticas para receptores
+    if (userType === 'receptor' || userType === 'ambos') {
+        statsCards.push(`
+            <div class="stat-card">
+                <div class="stat-number">${userRequests.length}</div>
+                <div>Solicitações Feitas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">${userRequests.filter(r => r.status === 'aprovado').length}</div>
+                <div>Roupas Recebidas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">${donations.length}</div>
+                <div>Doações Disponíveis</div>
+            </div>
+        `);
+    }
+    
+    statsGrid.innerHTML = statsCards.join('');
+}
+
+// Função para exibir solicitações recebidas (para doadores)
+function displayReceivedRequests() {
+    if (!currentUser) return;
+    
+    const userDonations = donations.filter(d => d.donor === currentUser.name);
+    const receivedRequests = requests.filter(r => 
+        userDonations.find(d => d.id === r.donationId)
+    );
+    
+    const requestsList = document.getElementById('requestsList');
+    
+    if (receivedRequests.length === 0) {
+        requestsList.innerHTML = '<p style="text-align: center; color: #666;">Ainda não há solicitações para suas doações.</p>';
+        return;
+    }
+    
+    requestsList.innerHTML = receivedRequests.map(request => `
+        <div class="donation-card">
+            <h4>${request.donationTitle}</h4>
+            <p><strong>Solicitante:</strong> ${request.requesterName}</p>
+            <p><strong>Telefone:</strong> ${request.requesterPhone}</p>
+            <p><strong>Status:</strong> ${request.status}</p>
+            <p><strong>Data:</strong> ${request.date.toLocaleDateString()}</p>
+            <div style="margin-top: 1rem;">
+                <button class="btn btn-primary" onclick="approveRequest(${request.id})" style="margin-right: 0.5rem;">
+                    Aprovar
+                </button>
+                <button class="btn btn-secondary" onclick="rejectRequest(${request.id})">
+                    Recusar
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Função para exibir minhas solicitações (para receptores)
+function displayMyRequests() {
+    if (!currentUser) return;
+    
+    const myRequests = requests.filter(r => r.requesterId === currentUser.id);
+    const requestsList = document.getElementById('myRequestsList');
+    
+    if (myRequests.length === 0) {
+        requestsList.innerHTML = '<p style="text-align: center; color: #666;">Você ainda não fez nenhuma solicitação.</p>';
+        return;
+    }
+    
+    requestsList.innerHTML = myRequests.map(request => `
+        <div class="donation-card">
+            <h4>${request.donationTitle}</h4>
+            <p><strong>Doador:</strong> ${request.donorName}</p>
+            <p><strong>Status:</strong> 
+                <span style="padding: 0.2rem 0.5rem; border-radius: 10px; font-size: 0.8rem; 
+                    ${request.status === 'aprovado' ? 'background: #d4edda; color: #155724;' : 
+                      request.status === 'recusado' ? 'background: #f8d7da; color: #721c24;' : 
+                      'background: #fff3cd; color: #856404;'}">
+                    ${request.status === 'pendente' ? 'Aguardando' : 
+                      request.status === 'aprovado' ? 'Aprovado' : 'Recusado'}
+                </span>
+            </p>
+            <p><strong>Solicitada em:</strong> ${request.date.toLocaleDateString()}</p>
+        </div>
+    `).join('');
 }
 
 // Exibição de doações
@@ -277,6 +519,25 @@ function displayUserDonations() {
     `).join('');
 }
 
+// Funções para aprovar/recusar solicitações
+window.approveRequest = function(requestId) {
+    const request = requests.find(r => r.id === requestId);
+    if (request) {
+        request.status = 'aprovado';
+        alert(`Solicitação aprovada! O contato de ${request.requesterName} é ${request.requesterPhone}.`);
+        displayReceivedRequests();
+    }
+}
+
+window.rejectRequest = function(requestId) {
+    const request = requests.find(r => r.id === requestId);
+    if (request) {
+        request.status = 'recusado';
+        alert('Solicitação recusada.');
+        displayReceivedRequests();
+    }
+}
+
 // Event listeners e inicialização
 document.addEventListener('DOMContentLoaded', function() {
     const modals = document.querySelectorAll('.modal');
@@ -301,6 +562,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const name = document.getElementById('registerName').value;
         const email = document.getElementById('registerEmail').value;
         const phone = document.getElementById('registerPhone').value;
+        const userType = document.getElementById('registerUserType').value;
         const password = document.getElementById('registerPassword').value;
         const confirmPassword = document.getElementById('registerConfirmPassword').value;
 
@@ -320,8 +582,8 @@ document.addEventListener('DOMContentLoaded', function() {
             name,
             email,
             phone,
-            password,
-            donations: []
+            userType,
+            password
         };
 
         users.push(newUser);
@@ -356,6 +618,12 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        // Verifica se é um doador ou ambos
+        if (currentUser.userType === 'receptor') {
+            alert('Apenas doadores podem cadastrar doações. Altere seu tipo de conta no perfil para "Doador" ou "Ambos".');
+            return;
+        }
+
         const newDonation = {
             id: donations.length + 1,
             title: document.getElementById('donationTitle').value,
@@ -366,6 +634,7 @@ document.addEventListener('DOMContentLoaded', function() {
             description: document.getElementById('donationDescription').value,
             location: document.getElementById('donationLocation').value,
             donor: currentUser.name,
+            donorId: currentUser.id,
             date: new Date()
         };
 
@@ -374,5 +643,37 @@ document.addEventListener('DOMContentLoaded', function() {
         this.reset();
         updateDashboardStats();
         displayUserDonations();
+    });
+
+    // Event listener para atualização de perfil
+    document.getElementById('profileForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (!currentUser) return;
+        
+        // Atualiza dados do usuário atual
+        currentUser.phone = document.getElementById('profilePhone').value;
+        currentUser.userType = document.getElementById('profileUserType').value;
+        
+        // Atualiza no array de usuários
+        const userIndex = users.findIndex(u => u.id === currentUser.id);
+        if (userIndex !== -1) {
+            users[userIndex] = { ...currentUser };
+        }
+        
+        // Atualiza interface
+        login(currentUser);
+        
+        alert('Perfil atualizado com sucesso!');
+    });
+
+    // Fecha dropdown ao clicar fora
+    document.addEventListener('click', function(e) {
+        const userMenu = document.getElementById('userMenu');
+        const dropdown = document.getElementById('userDropdown');
+        
+        if (userMenu && !userMenu.contains(e.target)) {
+            dropdown.classList.remove('active');
+        }
     });
 });

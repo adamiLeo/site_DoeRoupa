@@ -18,6 +18,16 @@
             <div class="auth-buttons">
                 <button class="btn btn-secondary" onclick="openModal('loginModal')">Entrar</button>
                 <button class="btn btn-primary" onclick="openModal('registerModal')">Cadastrar</button>
+                <div id="userMenu" class="user-menu" style="display: none;">
+                    <button class="btn btn-primary" id="userMenuBtn" onclick="toggleUserMenu()">
+                        <span id="userNameBtn">Usuário</span> ▼
+                    </button>
+                    <div id="userDropdown" class="user-dropdown">
+                        <a href="#" onclick="showUserDashboard()">Meu Dashboard</a>
+                        <a href="#" onclick="showProfile()">Meu Perfil</a>
+                        <a href="#" onclick="logout()">Sair</a>
+                    </div>
+                </div>
             </div>
         </nav>
     </header>
@@ -89,102 +99,139 @@
             <div class="main-content">
                 <div class="container content-area">
                     <div class="user-info">
-                        <h2>Bem-vindo, <span id="userName">Usuário</span>!</h2>
-                        <p>Gerencie suas doações e veja o impacto que você está fazendo</p>
+                        <h2>Bem-vindo, <span id="userName">Usuário</span>! 
+                            <span id="userTypeDisplay" class="user-type-badge"></span>
+                        </h2>
+                        <p id="dashboardDescription">Gerencie suas atividades na plataforma</p>
                     </div>
 
-                    <div class="dashboard-nav">
-                        <button class="active" onclick="showDashboardTab('stats')">Estatísticas</button>
-                        <button onclick="showDashboardTab('myDonations')">Minhas Doações</button>
-                        <button onclick="showDashboardTab('newDonation')">Nova Doação</button>
-                        <button onclick="logout()">Sair</button>
+                    <div class="dashboard-nav" id="dashboardNav">
+                        <!-- Navegação será inserida dinamicamente baseada no tipo de usuário -->
                     </div>
 
-                    <!-- Aba de Estatísticas -->
-                    <div id="statsTab" class="dashboard-tab">
-                        <div class="stats">
-                            <div class="stat-card">
-                                <div class="stat-number" id="totalDonations">0</div>
-                                <div>Total de Doações</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-number" id="helpedPeople">0</div>
-                                <div>Pessoas Ajudadas</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-number" id="activeDonations">0</div>
-                                <div>Doações Ativas</div>
+                    <!-- Abas do Dashboard -->
+                    <div id="dashboardContent">
+                        <!-- Aba de Estatísticas -->
+                        <div id="statsTab" class="dashboard-tab">
+                            <div class="stats" id="statsGrid">
+                                <!-- Estatísticas serão inseridas dinamicamente -->
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Aba de Minhas Doações -->
-                    <div id="myDonationsTab" class="dashboard-tab" style="display: none;">
-                        <h3>Suas Doações</h3>
-                        <div class="donations-grid" id="userDonationsGrid">
-                            <!-- Doações do usuário -->
+                        <!-- Aba de Minhas Doações -->
+                        <div id="myDonationsTab" class="dashboard-tab" style="display: none;">
+                            <h3>Suas Doações</h3>
+                            <div class="donations-grid" id="userDonationsGrid">
+                                <!-- Doações do usuário -->
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Aba de Nova Doação -->
-                    <div id="newDonationTab" class="dashboard-tab" style="display: none;">
-                        <h3>Cadastrar Nova Doação</h3>
-                        <form id="donationForm">
-                            <div class="form-group">
-                                <label for="donationTitle">Título da Doação</label>
-                                <input type="text" id="donationTitle" required>
+                        <!-- Aba de Nova Doação -->
+                        <div id="newDonationTab" class="dashboard-tab" style="display: none;">
+                            <h3>Cadastrar Nova Doação</h3>
+                            <form id="donationForm">
+                                <div class="form-group">
+                                    <label for="donationTitle">Título da Doação</label>
+                                    <input type="text" id="donationTitle" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="donationCategory">Categoria</label>
+                                    <select id="donationCategory" required>
+                                        <option value="">Selecione uma categoria</option>
+                                        <option value="infantil">Infantil</option>
+                                        <option value="masculina">Masculina</option>
+                                        <option value="feminina">Feminina</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="donationSize">Tamanho</label>
+                                    <select id="donationSize" required>
+                                        <option value="">Selecione o tamanho</option>
+                                        <option value="PP">PP</option>
+                                        <option value="P">P</option>
+                                        <option value="M">M</option>
+                                        <option value="G">G</option>
+                                        <option value="GG">GG</option>
+                                        <option value="XGG">XGG</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="donationBrand">Marca</label>
+                                    <input type="text" id="donationBrand">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="donationCondition">Estado de Conservação</label>
+                                    <select id="donationCondition" required>
+                                        <option value="">Selecione o estado</option>
+                                        <option value="novo">Novo</option>
+                                        <option value="seminovo">Seminovo</option>
+                                        <option value="usado">Usado</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="donationDescription">Descrição</label>
+                                    <textarea id="donationDescription" placeholder="Descreva a peça, cores, detalhes especiais, etc."></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="donationLocation">Localização</label>
+                                    <input type="text" id="donationLocation" placeholder="Cidade, Estado" required>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary">Cadastrar Doação</button>
+                            </form>
+                        </div>
+
+                        <!-- Aba de Solicitações Recebidas -->
+                        <div id="requestsTab" class="dashboard-tab" style="display: none;">
+                            <h3>Solicitações Recebidas</h3>
+                            <div id="requestsList">
+                                <p style="text-align: center; color: #666;">Ainda não há solicitações para suas doações.</p>
                             </div>
+                        </div>
 
-                            <div class="form-group">
-                                <label for="donationCategory">Categoria</label>
-                                <select id="donationCategory" required>
-                                    <option value="">Selecione uma categoria</option>
-                                    <option value="infantil">Infantil</option>
-                                    <option value="masculina">Masculina</option>
-                                    <option value="feminina">Feminina</option>
-                                </select>
+                        <!-- Aba de Minhas Solicitações -->
+                        <div id="myRequestsTab" class="dashboard-tab" style="display: none;">
+                            <h3>Minhas Solicitações</h3>
+                            <div id="myRequestsList">
+                                <p style="text-align: center; color: #666;">Você ainda não fez nenhuma solicitação.</p>
                             </div>
+                        </div>
 
-                            <div class="form-group">
-                                <label for="donationSize">Tamanho</label>
-                                <select id="donationSize" required>
-                                    <option value="">Selecione o tamanho</option>
-                                    <option value="PP">PP</option>
-                                    <option value="P">P</option>
-                                    <option value="M">M</option>
-                                    <option value="G">G</option>
-                                    <option value="GG">GG</option>
-                                    <option value="XGG">XGG</option>
-                                </select>
+                        <!-- Aba de Perfil -->
+                        <div id="profileTab" class="dashboard-tab" style="display: none;">
+                            <h3>Meu Perfil</h3>
+                            <div class="profile-info">
+                                <form id="profileForm">
+                                    <div class="form-group">
+                                        <label for="profileName">Nome</label>
+                                        <input type="text" id="profileName" readonly>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="profileEmail">E-mail</label>
+                                        <input type="email" id="profileEmail" readonly>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="profilePhone">Telefone</label>
+                                        <input type="tel" id="profilePhone">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="profileUserType">Tipo de Conta</label>
+                                        <select id="profileUserType">
+                                            <option value="doador">🎁 Doador</option>
+                                            <option value="receptor">🤝 Receptor</option>
+                                            <option value="ambos">❤️ Ambos</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                                </form>
                             </div>
-
-                            <div class="form-group">
-                                <label for="donationBrand">Marca</label>
-                                <input type="text" id="donationBrand">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="donationCondition">Estado de Conservação</label>
-                                <select id="donationCondition" required>
-                                    <option value="">Selecione o estado</option>
-                                    <option value="novo">Novo</option>
-                                    <option value="seminovo">Seminovo</option>
-                                    <option value="usado">Usado</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="donationDescription">Descrição</label>
-                                <textarea id="donationDescription" placeholder="Descreva a peça, cores, detalhes especiais, etc."></textarea>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="donationLocation">Localização</label>
-                                <input type="text" id="donationLocation" placeholder="Cidade, Estado" required>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary">Cadastrar Doação</button>
-                        </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -228,6 +275,17 @@
                     <label for="registerPhone">Telefone</label>
                     <input type="tel" id="registerPhone" required>
                 </div>
+                
+                <div class="form-group">
+                    <label for="registerUserType">Tipo de Conta</label>
+                    <select id="registerUserType" required>
+                        <option value="">Selecione o tipo de conta</option>
+                        <option value="doador">🎁 Doador - Quero doar roupas</option>
+                        <option value="receptor">🤝 Receptor - Preciso de roupas</option>
+                        <option value="ambos">❤️ Ambos - Quero doar e receber</option>
+                    </select>
+                </div>
+                
                 <div class="form-group">
                     <label for="registerPassword">Senha</label>
                     <input type="password" id="registerPassword" required>

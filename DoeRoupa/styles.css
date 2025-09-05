@@ -284,6 +284,57 @@ nav {
     text-align: center;
 }
 
+.user-menu {
+    position: relative;
+}
+
+.user-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    min-width: 200px;
+    display: none;
+    z-index: 1001;
+}
+
+.user-dropdown.active {
+    display: block;
+}
+
+.user-dropdown a {
+    display: block;
+    padding: 1rem 1.5rem;
+    text-decoration: none;
+    color: #333;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.3s ease;
+}
+
+.user-dropdown a:last-child {
+    border-bottom: none;
+}
+
+.user-dropdown a:hover {
+    background-color: #f8f9fa;
+}
+
+.user-type-badge {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    margin-left: 1rem;
+}
+
+.profile-info {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
 .dashboard {
     display: none;
 }
@@ -302,11 +353,17 @@ nav {
 .dashboard-nav button {
     background: none;
     border: none;
-    padding: 0.5rem 1rem;
+    padding: 0.75rem 1.5rem;
     margin-right: 1rem;
-    border-radius: 5px;
+    border-radius: 25px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.dashboard-nav button:hover {
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
 }
 
 .dashboard-nav button.active {
