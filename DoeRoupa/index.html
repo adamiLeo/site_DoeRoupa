@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doe Bem - Doações de Roupas</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo">Doe Bem ❤️</div>
+            <ul class="nav-links">
+                <li><a href="#" onclick="showHome()">Início</a></li>
+                <li><a href="#" onclick="showDonations()">Doações</a></li>
+                <li><a href="#" onclick="showAbout()">Sobre</a></li>
+            </ul>
+            <div class="auth-buttons">
+                <button class="btn btn-secondary" onclick="openModal('loginModal')">Entrar</button>
+                <button class="btn btn-primary" onclick="openModal('registerModal')">Cadastrar</button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Página Inicial -->
+        <div id="homePage" class="page">
+            <section class="hero">
+                <div class="container">
+                    <h1>Doe com o Coração</h1>
+                    <p>Conectamos pessoas que querem doar roupas com quem precisa. Faça a diferença hoje!</p>
+                    <button class="btn btn-primary" onclick="openModal('registerModal')">Começar a Doar</button>
+                </div>
+            </section>
+
+            <div class="main-content">
+                <div class="container content-area">
+                    <h2 style="text-align: center; margin-bottom: 3rem; color: #333;">Categorias de Doação</h2>
+                    
+                    <div class="categories">
+                        <div class="category-card" onclick="filterDonations('infantil')">
+                            <div class="category-icon">👶</div>
+                            <h3>Roupas Infantis</h3>
+                            <p>Roupas para crianças de todas as idades</p>
+                        </div>
+                        
+                        <div class="category-card" onclick="filterDonations('masculina')">
+                            <div class="category-icon">👨</div>
+                            <h3>Roupas Masculinas</h3>
+                            <p>Vestuário masculino variado</p>
+                        </div>
+                        
+                        <div class="category-card" onclick="filterDonations('feminina')">
+                            <div class="category-icon">👩</div>
+                            <h3>Roupas Femininas</h3>
+                            <p>Moda feminina para todas as ocasiões</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Página de Doações -->
+        <div id="donationsPage" class="page" style="display: none;">
+            <div class="main-content">
+                <div class="container content-area">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                        <h2>Catálogo de Doações</h2>
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <select id="categoryFilter" onchange="filterDonations(this.value)" style="padding: 0.5rem; border-radius: 5px; border: 2px solid #e1e1e1;">
+                                <option value="">Todas as categorias</option>
+                                <option value="infantil">👶 Infantil</option>
+                                <option value="masculina">👨 Masculina</option>
+                                <option value="feminina">👩 Feminina</option>
+                            </select>
+                            <p id="loginHint" style="margin: 0; color: #666; font-size: 0.9rem;"><i>💡 Faça login para solicitar roupas</i></p>
+                        </div>
+                    </div>
+                    
+                    <div class="donations-grid" id="donationsGrid">
+                        <!-- Doações serão carregadas aqui -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard do Usuário -->
+        <div id="userDashboard" class="page dashboard">
+            <div class="main-content">
+                <div class="container content-area">
+                    <div class="user-info">
+                        <h2>Bem-vindo, <span id="userName">Usuário</span>!</h2>
+                        <p>Gerencie suas doações e veja o impacto que você está fazendo</p>
+                    </div>
+
+                    <div class="dashboard-nav">
+                        <button class="active" onclick="showDashboardTab('stats')">Estatísticas</button>
+                        <button onclick="showDashboardTab('myDonations')">Minhas Doações</button>
+                        <button onclick="showDashboardTab('newDonation')">Nova Doação</button>
+                        <button onclick="logout()">Sair</button>
+                    </div>
+
+                    <!-- Aba de Estatísticas -->
+                    <div id="statsTab" class="dashboard-tab">
+                        <div class="stats">
+                            <div class="stat-card">
+                                <div class="stat-number" id="totalDonations">0</div>
+                                <div>Total de Doações</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="helpedPeople">0</div>
+                                <div>Pessoas Ajudadas</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="activeDonations">0</div>
+                                <div>Doações Ativas</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Aba de Minhas Doações -->
+                    <div id="myDonationsTab" class="dashboard-tab" style="display: none;">
+                        <h3>Suas Doações</h3>
+                        <div class="donations-grid" id="userDonationsGrid">
+                            <!-- Doações do usuário -->
+                        </div>
+                    </div>
+
+                    <!-- Aba de Nova Doação -->
+                    <div id="newDonationTab" class="dashboard-tab" style="display: none;">
+                        <h3>Cadastrar Nova Doação</h3>
+                        <form id="donationForm">
+                            <div class="form-group">
+                                <label for="donationTitle">Título da Doação</label>
+                                <input type="text" id="donationTitle" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="donationCategory">Categoria</label>
+                                <select id="donationCategory" required>
+                                    <option value="">Selecione uma categoria</option>
+                                    <option value="infantil">Infantil</option>
+                                    <option value="masculina">Masculina</option>
+                                    <option value="feminina">Feminina</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="donationSize">Tamanho</label>
+                                <select id="donationSize" required>
+                                    <option value="">Selecione o tamanho</option>
+                                    <option value="PP">PP</option>
+                                    <option value="P">P</option>
+                                    <option value="M">M</option>
+                                    <option value="G">G</option>
+                                    <option value="GG">GG</option>
+                                    <option value="XGG">XGG</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="donationBrand">Marca</label>
+                                <input type="text" id="donationBrand">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="donationCondition">Estado de Conservação</label>
+                                <select id="donationCondition" required>
+                                    <option value="">Selecione o estado</option>
+                                    <option value="novo">Novo</option>
+                                    <option value="seminovo">Seminovo</option>
+                                    <option value="usado">Usado</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="donationDescription">Descrição</label>
+                                <textarea id="donationDescription" placeholder="Descreva a peça, cores, detalhes especiais, etc."></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="donationLocation">Localização</label>
+                                <input type="text" id="donationLocation" placeholder="Cidade, Estado" required>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Cadastrar Doação</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal de Login -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Entrar na sua conta</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">E-mail</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Senha</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Entrar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Cadastro -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Criar conta</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="registerName">Nome completo</label>
+                    <input type="text" id="registerName" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">E-mail</label>
+                    <input type="email" id="registerEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPhone">Telefone</label>
+                    <input type="tel" id="registerPhone" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Senha</label>
+                    <input type="password" id="registerPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerConfirmPassword">Confirmar senha</label>
+                    <input type="password" id="registerConfirmPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Cadastrar</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
